@@ -231,8 +231,26 @@ class InterceptorStrategy(gamelib.AlgoCore):
             game_state.attempt_upgrade(location)
 
     def build_mobile_units(self, game_state: gamelib.GameState):
-        self.spawn_interceptors(game_state)
+        # self.spawn_interceptors(game_state)
+        
+        # if game_state.turn_number % attack_rate == 0:
+        #     attack_location = random.choice(attacker_locations)
+        #     game_state.attempt_spawn(SCOUT, attack_location, num=1000)
 
-        if game_state.turn_number % attack_rate == 0:
-            attack_location = random.choice(attacker_locations)
-            game_state.attempt_spawn(SCOUT, attack_location, num=1000)
+        struct_costs = 0
+        for location in game_state.game_map:
+            if game_state.contains_stationary_unit(location):
+                for unit in game_state.game_map[location]:
+                    if unit.player_index == 1:
+                        struct_costs += unit.cost[0]
+        gamelib.debug_write("enemy structure points on board: {}".format(struct_costs))
+
+        if game_state._player_resources[1]['MP'] >= 5:
+            self.spawn_interceptors(game_state)
+
+        attack_location = random.choice(attacker_locations)
+        if game_state._player_resources[1]['MP'] >= 6:
+            if struct_costs > 60: # attack with demolishers
+                game_state.attempt_spawn(DEMOLISHER, attack_location, num=1000)
+            else:
+                game_state.attempt_spawn(SCOUT, attack_location, num=1000)
